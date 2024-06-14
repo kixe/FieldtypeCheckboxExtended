@@ -1,0 +1,94 @@
+<?php namespace ProcessWire;
+
+/**
+ * ProcessWire Fieldtype Checkbox Extended
+ * 
+ * @author Christoph Thelen aka @kixe 2021/06/07
+ * @copyright © 2020 Christoph Thelen
+ * @license Licensed under GNU/GPL v3
+ * @link https://processwire.com/talk/topic/...
+ * @version 1.0.0 BETA
+ *
+ * @since 1.0.0 2024/06/14 - init
+ *
+ * made for ProcessWire 3.x, by Ryan Cramer
+ * https://processwire.com
+ * 
+ * This Fieldtype stores a single checkbox as integer. The ON (checked) value is 1 and OFF (unchecked) value is 0
+ * In contrast to the core field type, both the checked and the unchecked value are saved in the DB.
+ * In addition, the checked status can also be set as default in the field settings.
+ * 
+ * The difficulty in saving the unselected checkbox as a value in the DB is that an unselected checkbox does not exist at all in the transmitted form data. To avoid this problem, a hidden input field with a value was added via hook and the sum of both fields was used to determine whether the checkbox was selected or not.
+ *
+ */
+
+class FieldtypeCheckboxExtended extends FieldtypeCheckbox {
+
+	public static function getModuleInfo() {
+		return array(
+			'title' => 'Checkbox Extended',
+			'version' => 100,
+			'summary' => 'Checkbox field that saves both statuses (checked / unchecked). The default status can be configured via the field settings.',
+		);
+	}
+
+	/**
+	 * Get blank / default value for field
+	 * 
+	 * @param Page $page
+	 * @param Field $field
+	 * @return int
+	 * 
+	 */
+	public function getBlankValue(Page $page, Field $field) {
+		return $field->default_checked? 1 : 0;
+	}
+
+	/**
+	 * Sanitize value for field
+	 * 
+	 * @param Page $page
+	 * @param Field $field
+	 * @param mixed $value
+	 * @return int
+	 * 
+	 */
+	public function sanitizeValue(Page $page, Field $field, $value) {
+		return $value != 1?  '0' : '1';
+	}
+
+	/**
+	 * 3 important hooks
+	 * 
+	 */
+	public function init() {
+		// modify submitted value (array) for further processing
+ 		$this->addHookBefore('InputfieldCheckbox::processInput', function(HookEvent $e) {
+			$inputfield = $e->object;
+			$input = $e->arguments[0];
+			$value = array_sum($input[$inputfield->name]);
+			$input[$inputfield->name] = $value == 2? 0 : 1;
+			$e->arguments(0, $input);
+		});
+		// add hidden field
+		$this->addHookAfter('InputfieldCheckbox::render', function(HookEvent $e) {
+			$attr = $e->object->getAttributes();
+			$name = $attr['name'] . '[]';
+			$e->return = str_replace(["<input type='checkbox'", "name=\"$attr[name]\""], ["<input type='hidden' name=\"$attr[name]\" value='2'><input type='checkbox'", "name='$name'"], $e->return);
+		});
+		// add config checkbox to set 'checked' as default
+		$this->addHookAfter('InputfieldCheckbox::getConfigInputfields', function(HookEvent $e) {
+			$inputfield = $e->object;
+			$field = $inputfield->hasField;
+			if(!$field) return;
+			$wrapper = $e->return;
+			$f = $this->modules->InputfieldCheckbox;
+			$f_name = 'default_checked';
+			$f->name = $f_name;
+			$f->label = $this->_('Checked by default?');
+			$f->notes = $this->_('If this option is selected the inputfield will be checked by default.');
+			$f->attr('checked', $field->$f_name === 1 ? 'checked' : '');
+			$wrapper->add($f);
+		});
+	}
+}
