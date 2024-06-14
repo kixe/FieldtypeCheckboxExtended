@@ -65,6 +65,7 @@ class FieldtypeCheckboxExtended extends FieldtypeCheckbox {
 		// modify submitted value (array) for further processing
  		$this->addHookBefore('InputfieldCheckbox::processInput', function(HookEvent $e) {
 			$inputfield = $e->object;
+			if ($inputfield->hasFieldtype != $this) return;
 			$input = $e->arguments[0];
 			$value = array_sum($input[$inputfield->name]);
 			$input[$inputfield->name] = $value == 2? 0 : 1;
@@ -72,12 +73,16 @@ class FieldtypeCheckboxExtended extends FieldtypeCheckbox {
 		});
 		// add hidden field
 		$this->addHookAfter('InputfieldCheckbox::render', function(HookEvent $e) {
+			$inputfield = $e->object;
+			if ($inputfield->hasFieldtype != $this) return;
 			$attr = $e->object->getAttributes();
 			$name = $attr['name'] . '[]';
 			$e->return = str_replace(["<input type='checkbox'", "name=\"$attr[name]\""], ["<input type='hidden' name=\"$attr[name]\" value='2'><input type='checkbox'", "name='$name'"], $e->return);
 		});
 		// add config checkbox to set 'checked' as default
 		$this->addHookAfter('InputfieldCheckbox::getConfigInputfields', function(HookEvent $e) {
+			$inputfield = $e->object;
+			if ($inputfield->hasFieldtype != $this) return;
 			$inputfield = $e->object;
 			$field = $inputfield->hasField;
 			if(!$field) return;
