@@ -19,6 +19,8 @@
  * In addition, the checked status can also be set as default in the field settings.
  * 
  * The difficulty in saving the unselected checkbox as a value in the DB is that an unselected checkbox does not exist at all in the transmitted form data. To avoid this problem, a hidden input field with a value was added via hook and the sum of both fields was used to determine whether the checkbox was checked or not.
+ * 
+ * @todo fix bug: does not work with custom file / image fields if default is checked
  *
  */
 
