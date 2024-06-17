@@ -20,7 +20,10 @@
  * 
  * The difficulty in saving the unselected checkbox as a value in the DB is that an unselected checkbox does not exist at all in the transmitted form data. To avoid this problem, a hidden input field with a value was added via hook and the sum of both fields was used to determine whether the checkbox was checked or not.
  * 
- * @todo fix bug: does not work with custom file / image fields if default is checked
+ * @todo  report issue: does not work with custom file / image fields if default is checked
+ * Currently InputfieldFile::getItemInputfields() does not check against value 0 to uncheck if checked is default
+ * LINE 1572			if($value) $f->attr('checked', 'checked');
+ * LINE 1573 (added)    else if(!$value) $f->attr('checked', '');
  *
  */
 
