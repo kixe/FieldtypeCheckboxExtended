@@ -11,8 +11,8 @@ The solution is based on the following trick:
 HTML
 
 ```
-<input type="checkbox" name="checkboxname[]" value="2" />
-<input type="hidden" name="checkboxname[]" value="0" />
+<input type="checkbox" name="checkboxname[]" value="1" />
+<input type="hidden" name="checkboxname[]" value="2" />
 ```
 
 PHP
